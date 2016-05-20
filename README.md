@@ -1,5 +1,5 @@
 # ExLogger
-ExLogger十一个CI的Library，以日志文件保存此次请求的控制器和执行的方法，GET参数，POST参数，SESSION变量和所执行的全部SQL语句，默认存储在logs文件夹下，文件名默认为exlog-YYYY-mm-dd.php。
+ExLogger是一个CI的Library，以日志文件保存此次请求的控制器和执行的方法，GET参数，POST参数，SESSION变量和所执行的全部SQL语句，默认存储在logs文件夹下，文件名默认为exlog-YYYY-mm-dd.php。
 
 ##调用方式
 通过构造器调用
