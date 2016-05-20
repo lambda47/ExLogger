@@ -1,36 +1,94 @@
 <?php
 /**
+ * @author  Lambda47
+ * @version 1.0
+ * @link    https://github.com/lambda47/ExLogger
+ */
+
+/**
  * Class ExLogger
  * 记录每次访问的GET参数、POST参数、SESSION变量和执行的SQL语句
  */
 class ExLogger {
     protected $CI;
-    //所有执行的SQL语句
+    /**
+     * 所有执行的SQL语句
+     * @access protected
+     * @var array
+     */
     protected $queries = array();
-    //是否记录执行的SQL语句
+    /**
+     * 是否记录执行的SQL语句
+     * @access private
+     * @var bool
+     */
     private $log_query = false;
-    //是否记录GET参数
+    /**
+     * 是否记录GET参数
+     * @access private
+     * @var bool
+     */
     private $log_get = false;
-    //是否记录POST参数
+    /**
+     * 是否记录POST参数
+     * @access private
+     * @var bool
+     */
     private $log_post = false;
-    //是否记录SESSION变量
+    /**
+     * 是否记录SESSION变量
+     * @access private
+     * @var bool
+     */
     private $log_session = false;
-    //目录名
+    /**
+     * 目录名
+     * @access private
+     * @var string
+     */
     private $directory_name;
-    //控制器名
+    /**
+     * 控制器名
+     * @access private
+     * @var string
+     */
     private $controller_name;
-    //调用方法名
+    /**
+     * 调用方法名
+     * @access private
+     * @var string
+     */
     private $action_name;
 
-    //记录GET参数
+    /**
+     * 记录GET参数
+     * @const
+     * @var int
+     */
     const LOG_GET = 0b1;
-    //记录POST参数
+    /**
+     * 记录POST参数
+     * @const
+     * @var int
+     */
     const LOG_POST = 0b10;
-    //记录GET和POST参数
+    /**
+     * 记录GET和POST参数
+     * @const
+     * @var int
+     */
     const LOG_REQUEST = 0b11;
-    //记录SESSION变量
+    /**
+     * 记录SESSION变量
+     * @const
+     * @var int
+     */
     const LOG_SESSION = 0b100;
-    //记录执行的SQL语句
+    /**
+     * 记录执行的SQL语句
+     * @const
+     * @var int
+     */
     const LOG_QUERY = 0b1000;
 
     /**
@@ -41,10 +99,12 @@ class ExLogger {
      */
     public function __construct($log_option = NULL) {
         $this->CI =& get_instance();
-        $this->directory_name = empty($this->CI->router->directory) ? '' : substr($this->CI->router->directory, 0, strlen($this->CI->router->directory) - 1);
+        $this->directory_name = empty($this->CI->router->directory) ? ''
+            : substr($this->CI->router->directory, 0, strlen($this->CI->router->directory) - 1);
         $this->controller_name = empty($this->CI->router->class) ? '' : $this->CI->router->class;
         $this->action_name = empty($this->CI->router->method) ? '' : $this->CI->router->method;
-        if (isset($log_option)) {
+        if (isset($log_option))
+        {
             $this->get($log_option & self::LOG_GET);
             $this->post($log_option & self::LOG_POST);
             $this->session($log_option & self::LOG_SESSION);
@@ -130,57 +190,79 @@ class ExLogger {
      */
     public function save() {
         $log_path = ($this->CI->config->item('log_path') !== '') ? $this->CI->config('log_path') : APPPATH.'logs'.DIRECTORY_SEPARATOR;
-        if (!file_exists($log_path)) {
+        if (!file_exists($log_path))
+        {
             mkdir($log_path, 0755, $log_path);
         }
         $log_file = 'exlog-'.date('Y-m-d').'.php';
-        if ($fp = @fopen($log_path.$log_file, 'ab')) {
+        if ($fp = @fopen($log_path.$log_file, 'ab'))
+        {
             flock($fp, LOCK_EX);
             $request_message =  date('Y-m-d H:i:s')."\t".$this->directory_name."\t".$this->controller_name . ' => ' . $this->action_name."\n";
             fwrite($fp, $request_message);
-            if ($this->log_get) {
+            if ($this->log_get)
+            {
                 fwrite($fp, str_repeat('=', 100)."\n");
                 fwrite($fp, 'GET:'.(empty($_GET) ? 'Empty' : '')."\n");
-                if (!empty($_GET)) {
-                    foreach ($_GET as $key => $value) {
-                        if (is_array($value)) {
+                if (!empty($_GET))
+                {
+                    foreach ($_GET as $key => $value)
+                    {
+                        if (is_array($value))
+                        {
                             fwrite($fp, $key . ":\t" . var_export($value, true) . "\n");
-                        } else {
+                        }
+                        else
+                        {
                             fwrite($fp, $key . ":\t" . $value . "\n");
                         }
                     }
                 }
             }
-            if ($this->log_post) {
+            if ($this->log_post)
+            {
                 fwrite($fp, str_repeat('-', 100)."\n");
                 fwrite($fp, 'POST:'.(empty($_POST) ? 'Empty' : '')."\n");
-                if (!empty($_POST)) {
-                    foreach ($_POST as $key => $value) {
-                        if (is_array($value)) {
+                if (!empty($_POST))
+                {
+                    foreach ($_POST as $key => $value)
+                    {
+                        if (is_array($value))
+                        {
                             fwrite($fp, $key . ":\t" . var_export($value, true) . "\n");
-                        } else {
+                        }
+                        else
+                        {
                             fwrite($fp, $key . ":\t" . $value . "\n");
                         }
                     }
                 }
             }
-            if ($this->log_session) {
+            if ($this->log_session)
+            {
                 fwrite($fp, str_repeat('-', 100)."\n");
                 fwrite($fp, 'SESSION:'.(empty($_SESSION) ? 'Empty' : '')."\n");
-                if (!empty($_SESSION)) {
-                    foreach ($_SESSION as $key => $value) {
-                        if (is_array($value)) {
+                if (!empty($_SESSION))
+                {
+                    foreach ($_SESSION as $key => $value)
+                    {
+                        if (is_array($value))
+                        {
                             fwrite($fp, $key . ":\t" . var_export($value, true) . "\n");
-                        } else {
+                        }
+                        else
+                        {
                             fwrite($fp, $key . ":\t" . $value . "\n");
                         }
                     }
                 }
             }
-            if ($this->log_query) {
+            if ($this->log_query)
+            {
                 fwrite($fp, str_repeat('-', 100)."\n");
                 fwrite($fp, 'QUERY:'.(empty($this->queries) ? 'Empty' : '')."\n");
-                foreach($this->queries as $key => $value) {
+                foreach($this->queries as $key => $value)
+                {
                     $query_sql = preg_replace('/\s+/', ' ', $value['sql']);
                     fwrite($fp, ($key + 1).":\t(".$value['time']." microsecond)\t".$query_sql."\n");
                 }
