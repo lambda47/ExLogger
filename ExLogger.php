@@ -62,31 +62,26 @@ class ExLogger {
 
     /**
      * 记录GET参数
-     * @const
      * @var int
      */
     const LOG_GET = 0b1;
     /**
      * 记录POST参数
-     * @const
      * @var int
      */
     const LOG_POST = 0b10;
     /**
      * 记录GET和POST参数
-     * @const
      * @var int
      */
     const LOG_REQUEST = 0b11;
     /**
      * 记录SESSION变量
-     * @const
      * @var int
      */
     const LOG_SESSION = 0b100;
     /**
      * 记录执行的SQL语句
-     * @const
      * @var int
      */
     const LOG_QUERY = 0b1000;
