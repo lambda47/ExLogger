@@ -85,6 +85,11 @@ class ExLogger {
      * @var int
      */
     const LOG_QUERY = 0b1000;
+    /**
+     * 记录GET、POST、SESSION、SQL
+     * @var int
+     */
+    const LOG_ALL = 0b1111;
 
     /**
      * 构造函数
@@ -94,8 +99,7 @@ class ExLogger {
      */
     public function __construct($log_option = NULL) {
         $this->CI =& get_instance();
-        $this->directory_name = empty($this->CI->router->directory) ? ''
-            : substr($this->CI->router->directory, 0, strlen($this->CI->router->directory) - 1);
+        $this->directory_name = empty($this->CI->router->directory) ? '' : substr($this->CI->router->directory, 0, - 1);
         $this->controller_name = empty($this->CI->router->class) ? '' : $this->CI->router->class;
         $this->action_name = empty($this->CI->router->method) ? '' : $this->CI->router->method;
         if (isset($log_option))
@@ -193,7 +197,7 @@ class ExLogger {
         if ($fp = @fopen($log_path.$log_file, 'ab'))
         {
             flock($fp, LOCK_EX);
-            $request_message =  date('Y-m-d H:i:s')."\t".$this->directory_name."\t".$this->controller_name . ' => ' . $this->action_name."\n";
+            $request_message =  date('Y-m-d H:i:s')."\t".$this->directory_name.'/'.$this->controller_name . ' => ' . $this->action_name."\n";
             fwrite($fp, $request_message);
             if ($this->log_get)
             {
