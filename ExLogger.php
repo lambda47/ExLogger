@@ -115,12 +115,13 @@ class ExLogger {
      * 魔术方法，处理未定义的方法名
      *
      * 处理的方法名包含get、post、session、require、queries、save_get、save_post、save_get_post、save_post_get、
-     * save_request_session_queries ...
+     * save_request_session_queries、console_get、console_post、console_get_post、console_post_get、
+     * console_request_session_queries ...
      *
      * @access public
      * @param string $name 方法名
      * @param array $arguments 调用方法时传递的参数
-     * @return $this|void get、post、session、require和queries方法返回$this，save开头的方法返回void
+     * @return ExLogger|void get、post、session、require和queries方法返回$this，save开头的方法返回void
      */
     public function __call($name, $arguments) {
         $arg = empty($arguments) ? true : $arguments[0];
@@ -143,14 +144,14 @@ class ExLogger {
                 break;
             default:
                 $name_ary = explode('_', $name);
-                if ($name_ary[0] === 'save')
+                if ($name_ary[0] === 'save' || $name_ary[0] === 'console')
                 {
-                    array_shift($name_ary);
+                    $name_first = array_shift($name_ary);
                     foreach ($name_ary as $item)
                     {
                         call_user_func(array($this, $item), empty($arguments) ? array(true) : $arguments);
                     }
-                    $this->save();
+                    $this->{$name_first}();
                     return;
                 }
                 break;
@@ -173,7 +174,7 @@ class ExLogger {
                 $query_sqls = $value->db->queries;
                 $query_times = $value->db->query_times;
                 foreach ($query_sqls as $index => $sql) {
-                    $queries[] = array('sql' => $sql, 'time' => $query_times[$index]);
+                    $queries[] = array('sql' => preg_replace('/\s+/', ' ', $sql), 'time' => $query_times[$index]);
                 }
                 break;
             }
@@ -188,7 +189,8 @@ class ExLogger {
      * @return void
      */
     public function save() {
-        $log_path = ($this->CI->config->item('log_path') !== '') ? $this->CI->config('log_path') : APPPATH.'logs'.DIRECTORY_SEPARATOR;
+        $log_path = ($this->CI->config->item('log_path') !== '') ? $this->CI->config('log_path')
+            : APPPATH . 'logs' . DIRECTORY_SEPARATOR;
         if (!file_exists($log_path))
         {
             mkdir($log_path, 0755, $log_path);
@@ -197,7 +199,9 @@ class ExLogger {
         if ($fp = @fopen($log_path.$log_file, 'ab'))
         {
             flock($fp, LOCK_EX);
-            $request_message =  date('Y-m-d H:i:s')."\t".$this->directory_name.'/'.$this->controller_name . ' => ' . $this->action_name."\n";
+            $request_message =  date('Y-m-d H:i:s') . "\t" .
+                (empty($this->directory_name) ? '' : ($this->directory_name . '/')) .
+                $this->controller_name . ' => ' . $this->action_name ."\n";
             fwrite($fp, $request_message);
             if ($this->log_get)
             {
@@ -262,13 +266,40 @@ class ExLogger {
                 fwrite($fp, 'QUERY:'.(empty($this->queries) ? 'Empty' : '')."\n");
                 foreach($this->queries as $key => $value)
                 {
-                    $query_sql = preg_replace('/\s+/', ' ', $value['sql']);
-                    fwrite($fp, ($key + 1).":\t(".$value['time']." microsecond)\t".$query_sql."\n");
+                    fwrite($fp, ($key + 1).":\t(".$value['time']." microsecond)\t".$value['sql']."\n");
                 }
             }
             fwrite($fp, "\n\n");
             flock($fp, LOCK_UN);
             fclose($fp);
         }
+    }
+
+    /**
+     * 将记录信息保存到HTTP HEAD中
+     *
+     * @access public
+     * @return void
+     */
+    public function console()
+    {
+        $profiler_data = array(
+            'DIRECTORY' => $this->directory_name,
+            'CONTROLLER' => $this->controller_name,
+            'ACTION' => $this->action_name
+        );
+        if ($this->log_get && !empty($_GET)) {
+            $profiler_data['GET'] = $_GET;
+        }
+        if ($this->log_post && !empty($_POST)) {
+            $profiler_data['POST'] = $_POST;
+        }
+        if ($this->log_session && !empty($_SESSION)) {
+            $profiler_data['SESSION'] = $_SESSION;
+        }
+        if ($this->log_query && !empty($this->queries)) {
+            $profiler_data['QUERIES'] = $this->queries;
+        }
+        header('EXLOGGER: '.json_encode($profiler_data));
     }
 }
