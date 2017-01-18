@@ -1,7 +1,7 @@
 <?php
 /**
  * @author  Lambda47
- * @version 1.0
+ * @version 2.0
  * @link    https://github.com/lambda47/ExLogger
  */
 
@@ -143,16 +143,31 @@ class ExLogger {
                 $this->log_query = $arg;
                 break;
             default:
-                $name_ary = explode('_', $name);
-                if ($name_ary[0] === 'save' || $name_ary[0] === 'console')
+                $func_name_ary = explode('_', $name);
+                if ($func_name_ary[0] === 'save' || $func_name_ary[0] === 'console')
                 {
-                    $name_first = array_shift($name_ary);
-                    foreach ($name_ary as $item)
+                    $func_name_first = array_shift($func_name_ary);
+                    if (!empty($func_name_ary) && $func_name_ary[0] === 'save' || $func_name_ary[0] === 'console')
+                    {
+                        $func_name_second = array_shift($func_name_ary);
+                        if ($func_name_second === $func_name_first)
+                        {
+                            trigger_error('Call to undefined function ' . $name, E_USER_ERROR);
+                        }
+                    }
+                    foreach ($func_name_ary as $item)
                     {
                         call_user_func(array($this, $item), empty($arguments) ? array(true) : $arguments);
                     }
-                    $this->{$name_first}();
-                    return;
+                    $this->{$func_name_first}();
+                    if (isset($func_name_second))
+                    {
+                        $this->{$func_name_second}();
+                    }
+                }
+                else
+                {
+                    trigger_error('Call to undefined function ' . $name, E_USER_ERROR);
                 }
                 break;
         }
@@ -186,7 +201,7 @@ class ExLogger {
      * 将记录的数据保存到日志文件
      *
      * @access public
-     * @return void
+     * @return ExLogger
      */
     public function save() {
         $log_path = ($this->CI->config->item('log_path') !== '') ? $this->CI->config('log_path')
@@ -273,13 +288,14 @@ class ExLogger {
             flock($fp, LOCK_UN);
             fclose($fp);
         }
+        return $this;
     }
 
     /**
      * 将记录信息保存到HTTP HEAD中
      *
      * @access public
-     * @return void
+     * @return ExLogger
      */
     public function console()
     {
@@ -301,5 +317,6 @@ class ExLogger {
             $profiler_data['QUERIES'] = $this->queries;
         }
         header('EXLOGGER: '.json_encode($profiler_data));
+        return $this;
     }
 }

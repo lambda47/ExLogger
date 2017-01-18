@@ -6,51 +6,53 @@ ExLogger是一个CI的Library：
 
 ##调用方式
 通过构造器调用
-<pre>
+```php
 $logger = new ExLogger(ExLogger::LOG_REQUEST | ExLogger::LOG_SESSION | ExLogger::LOG_QUERY);
 $logger->save();
-</pre>
-<pre>
+```
+```php
 $logger = new ExLogger(ExLogger::LOG_ALL);
 $logger->console();
-</pre>
+```
 链式操作调用
-<pre>
+```php
 $logger = new ExLogger();
 $logger->get()->post()->session()->queries()->save();
-</pre>
-<pre>
+```
+```php
 $logger = new ExLogger();
 $logger->request()->session()->queries()->console();
-</pre>
-以save或console开头的方法调用
-<pre>
+```
+以save、console、save_console、console_save开头的方法调用
+```php
 $logger = new ExLogger();
 //save后面接post、get、request、session、requires，数量和顺序可变，以下划线“_”分割
 $logger->save_post_queries();
-</pre>
-<pre>
+```
+```php
 $logger = new ExLogger();
 //console后面接post、get、request、session、requires，数量和顺序可变，以下划线“_”分割
 $logger->console_post_queries_session();
-</pre>
+```
 ##每次请求后自动执行
 可以在config中开启hook，然后在post_controller hook中调用ExLogger
-<pre>
+
+```php
 $config['enable_hooks'] = TRUE;
-</pre>
-<pre>
+```
+```php
 $hook['post_controller'] = function () {
     $CI =& get_instance();
     $CI->load->library('ExLogger');
     $logger = new ExLogger();
     $logger->save_request_session_queries();
 };
-</pre>
+```
 **post\_controller hook会在控制器完全运行结束时执行，如果程序执行中通过exit或die退出，post_controller hook中的代码将无法执行**
 
 这种情况下可以通过register\_shutdown\_function方式实现，在index.php中添加如下代码
-<pre>
+
+```php
 if (ENVIRONMENT != 'production')
 {
 	ob_start();
@@ -65,4 +67,4 @@ if (ENVIRONMENT != 'production')
 }
 
 require_once BASEPATH.'core/CodeIgniter.php';
-</pre>
+```
