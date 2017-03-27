@@ -189,7 +189,7 @@ class ExLogger {
                 $query_sqls = $value->db->queries;
                 $query_times = $value->db->query_times;
                 foreach ($query_sqls as $index => $sql) {
-                    $queries[] = array('sql' => preg_replace('/\s+/', ' ', $sql), 'time' => $query_times[$index]);
+                    $queries[] = array('sql' => preg_replace('/\s+/', ' ', trim($sql)), 'time' => $query_times[$index]);
                 }
                 break;
             }
