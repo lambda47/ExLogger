@@ -281,7 +281,7 @@ class ExLogger {
                 fwrite($fp, 'QUERY:'.(empty($this->queries) ? 'Empty' : '')."\n");
                 foreach($this->queries as $key => $value)
                 {
-                    fwrite($fp, ($key + 1).":\t(".$value['time']." microsecond)\t".$value['sql']."\n");
+                    fwrite($fp, ($key + 1).":\t(".$value['time']." second)\t".$value['sql']."\n");
                 }
             }
             fwrite($fp, "\n\n");
