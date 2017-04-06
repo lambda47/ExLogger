@@ -1,7 +1,7 @@
 <?php
 /**
  * @author  Lambda47
- * @version 2.0
+ * @version 1.0
  * @link    https://github.com/lambda47/ExLogger
  */
 
@@ -182,16 +182,32 @@ class ExLogger {
      */
     protected function get_queries() {
         $queries = array();
-        foreach (get_object_vars($this->CI) as $name => $value)
+        $db = NULL;
+        foreach (get_object_vars($this->CI) as $property_name => $property_value)
         {
-            if (is_object($value) && $value instanceof CI_Model)
+            if (is_object($property_value))
             {
-                $query_sqls = $value->db->queries;
-                $query_times = $value->db->query_times;
-                foreach ($query_sqls as $index => $sql) {
-                    $queries[] = array('sql' => preg_replace('/\s+/', ' ', trim($sql)), 'time' => $query_times[$index]);
+                if ($property_value instanceof CI_DB)
+                {
+                    $db = $property_value;
                 }
-                break;
+                elseif ($property_value instanceof CI_Model)
+                {
+                    foreach (get_object_vars($property_value) as $model_property_name => $model_property_value) {
+                        if ($model_property_value instanceof CI_DB)
+                        {
+                            $db = $model_property_value;
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+        if (!is_null($db)) {
+            $query_sqls = $db->queries;
+            $query_times = $db->query_times;
+            foreach ($query_sqls as $index => $sql) {
+                $queries[] = array('sql' => preg_replace('/\s+/', ' ', trim($sql)), 'time' => $query_times[$index]);
             }
         }
         return $queries;
@@ -201,7 +217,7 @@ class ExLogger {
      * 将记录的数据保存到日志文件
      *
      * @access public
-     * @return ExLogger
+     * @return void
      */
     public function save() {
         $log_path = ($this->CI->config->item('log_path') !== '') ? $this->CI->config('log_path')
@@ -288,35 +304,36 @@ class ExLogger {
             flock($fp, LOCK_UN);
             fclose($fp);
         }
-        return $this;
     }
 
     /**
      * 将记录信息保存到HTTP HEAD中
      *
      * @access public
-     * @return ExLogger
+     * @return void
      */
-    public function console()
-    {
+    public function console() {
         $profiler_data = array(
             'DIRECTORY' => $this->directory_name,
             'CONTROLLER' => $this->controller_name,
             'ACTION' => $this->action_name
         );
-        if ($this->log_get && !empty($_GET)) {
+        if ($this->log_get && !empty($_GET))
+        {
             $profiler_data['GET'] = $_GET;
         }
-        if ($this->log_post && !empty($_POST)) {
+        if ($this->log_post && !empty($_POST))
+        {
             $profiler_data['POST'] = $_POST;
         }
-        if ($this->log_session && !empty($_SESSION)) {
+        if ($this->log_session && !empty($_SESSION))
+        {
             $profiler_data['SESSION'] = $_SESSION;
         }
-        if ($this->log_query && !empty($this->queries)) {
+        if ($this->log_query && !empty($this->queries))
+        {
             $profiler_data['QUERIES'] = $this->queries;
         }
         header('EXLOGGER: '.json_encode($profiler_data));
-        return $this;
     }
 }
