@@ -68,3 +68,12 @@ if (ENVIRONMENT != 'production')
 
 require_once BASEPATH.'core/CodeIgniter.php';
 ```
+##EXPLAIN SQL
+对支持explain命令的数据库，记录执行sql explain的结果
+```php
+$logger = new Exlogger();
+$logger->explain_sql(true);
+```
+```php
+$logger = new Exlogger(Exlogger::SQL_EXPLAIN);
+```

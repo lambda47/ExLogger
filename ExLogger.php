@@ -59,6 +59,12 @@ class ExLogger {
      * @var string
      */
     private $action_name;
+    /**
+     * 是否分析执行SQL
+     * @access private
+     * @var bool
+     */
+    private $sql_explain = false;
 
     /**
      * 记录GET参数
@@ -90,6 +96,11 @@ class ExLogger {
      * @var int
      */
     const LOG_ALL = 0b1111;
+    /**
+     * 分析执行SQL
+     * @var int
+     */
+    const SQL_EXPLAIN = 0b10000;
 
     /**
      * 构造函数
@@ -108,6 +119,7 @@ class ExLogger {
             $this->post($log_option & self::LOG_POST);
             $this->session($log_option & self::LOG_SESSION);
             $this->queries($log_option & self::LOG_QUERY);
+            $this->explain_sql($log_option & self::SQL_EXPLAIN);
         }
     }
 
@@ -175,6 +187,18 @@ class ExLogger {
     }
 
     /**
+     * 是否分析执行SQL
+     *
+     * @access public
+     * @param bool $sql_explain 是否分析执行SQL
+     * @return ExLogger
+     */
+    public function explain_sql($sql_explain) {
+        $this->sql_explain = $sql_explain;
+        return $this;
+    }
+
+    /**
      * 获取本次访问执行的所有SQL语句
      *
      * @access protected
@@ -207,7 +231,12 @@ class ExLogger {
             $query_sqls = $db->queries;
             $query_times = $db->query_times;
             foreach ($query_sqls as $index => $sql) {
-                $queries[] = array('sql' => preg_replace('/\s+/', ' ', trim($sql)), 'time' => $query_times[$index]);
+                $sql_detail = array('sql' => preg_replace('/\s+/', ' ', trim($sql)), 'time' => $query_times[$index]);
+                if ($this->sql_explain) {
+                    $query = $db->query('EXPLAIN ' . $sql);
+                    $sql_detail['explain'] = $query->result_array();
+                }
+                $queries[] = $sql_detail;
             }
         }
         return $queries;
@@ -232,12 +261,12 @@ class ExLogger {
             flock($fp, LOCK_EX);
             $request_message =  date('Y-m-d H:i:s') . "\t" .
                 (empty($this->directory_name) ? '' : ($this->directory_name . '/')) .
-                $this->controller_name . ' => ' . $this->action_name ."\n";
+                $this->controller_name . ' => ' . $this->action_name  . "\n";
             fwrite($fp, $request_message);
             if ($this->log_get)
             {
                 fwrite($fp, str_repeat('=', 100)."\n");
-                fwrite($fp, 'GET:'.(empty($_GET) ? 'Empty' : '')."\n");
+                fwrite($fp, 'GET:'.(empty($_GET) ? 'Empty' : '') . "\n");
                 if (!empty($_GET))
                 {
                     foreach ($_GET as $key => $value)
@@ -256,7 +285,7 @@ class ExLogger {
             if ($this->log_post)
             {
                 fwrite($fp, str_repeat('-', 100)."\n");
-                fwrite($fp, 'POST:'.(empty($_POST) ? 'Empty' : '')."\n");
+                fwrite($fp, 'POST:'.(empty($_POST) ? 'Empty' : '') . "\n");
                 if (!empty($_POST))
                 {
                     foreach ($_POST as $key => $value)
@@ -274,8 +303,8 @@ class ExLogger {
             }
             if ($this->log_session)
             {
-                fwrite($fp, str_repeat('-', 100)."\n");
-                fwrite($fp, 'SESSION:'.(empty($_SESSION) ? 'Empty' : '')."\n");
+                fwrite($fp, str_repeat('-', 100) . "\n");
+                fwrite($fp, 'SESSION:'.(empty($_SESSION) ? 'Empty' : '') . "\n");
                 if (!empty($_SESSION))
                 {
                     foreach ($_SESSION as $key => $value)
@@ -293,11 +322,23 @@ class ExLogger {
             }
             if ($this->log_query)
             {
-                fwrite($fp, str_repeat('-', 100)."\n");
-                fwrite($fp, 'QUERY:'.(empty($this->queries) ? 'Empty' : '')."\n");
+                fwrite($fp, str_repeat('-', 100) . "\n");
+                fwrite($fp, 'QUERY:'.(empty($this->queries) ? 'Empty' : '') . "\n");
                 foreach($this->queries as $key => $value)
                 {
-                    fwrite($fp, ($key + 1).":\t(".$value['time']." second)\t".$value['sql']."\n");
+                    fwrite($fp, ($key + 1) . ":\t(" . $value['time'] . " second)\t" . $value['sql'] . "\n");
+                    if ($this->sql_explain && isset($value['explain']))
+                    {
+                        foreach ($value['explain'] as $explain)
+                        {
+                            fwrite($fp, str_repeat('=', 100) . "\n");
+                            foreach ($explain as $explain_key => $explain_value)
+                            {
+                                fwrite($fp, $explain_key . ":\t" . $explain_value . "\n");
+                            }
+                        }
+                        fwrite($fp, "\n");
+                    }
                 }
             }
             fwrite($fp, "\n\n");
