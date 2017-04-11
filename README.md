@@ -4,7 +4,7 @@ ExLogger是一个CI的Library：
 1.  应用save方式会以日志文件保存此次请求的控制器和执行的方法，GET参数，POST参数，SESSION变量和所执行的全部SQL语句，默认存储在logs文件夹下，文件名默认为exlog-YYYY-mm-dd.php
 2.  应用console方式会将此次请求的控制器和执行方法，GET参数，POST参数，SESSION变量和所执行的全部SQL语句信息保存在响应的HTTP header中，配合chrome插件ExLogger For Chrome，可以在Chrome浏览器的console中显示信息
 
-##调用方式
+## 调用方式
 通过构造器调用
 ```php
 $logger = new ExLogger(ExLogger::LOG_REQUEST | ExLogger::LOG_SESSION | ExLogger::LOG_QUERY);
@@ -34,7 +34,7 @@ $logger = new ExLogger();
 //console后面接post、get、request、session、requires，数量和顺序可变，以下划线“_”分割
 $logger->console_post_queries_session();
 ```
-##每次请求后自动执行
+## 每次请求后自动执行
 可以在config中开启hook，然后在post_controller hook中调用ExLogger
 
 ```php
@@ -68,7 +68,7 @@ if (ENVIRONMENT != 'production')
 
 require_once BASEPATH.'core/CodeIgniter.php';
 ```
-##EXPLAIN SQL
+## EXPLAIN SQL
 对支持explain命令的数据库，记录执行sql explain的结果
 ```php
 $logger = new Exlogger();
