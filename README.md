@@ -3,6 +3,13 @@ ExLogger是一个CI的Library：
 
 1.  应用save方式会以日志文件保存此次请求的控制器和执行的方法，GET参数，POST参数，SESSION变量和所执行的全部SQL语句，默认存储在logs文件夹下，文件名默认为exlog-YYYY-mm-dd.php
 2.  应用console方式会将此次请求的控制器和执行方法，GET参数，POST参数，SESSION变量和所执行的全部SQL语句信息保存在响应的HTTP header中，配合chrome插件ExLogger For Chrome，可以在Chrome浏览器的console中显示信息
+  *  **Chrome插件** [ExLogger For Chrome](https://github.com/lambda47/ExLoggerForChrome)  
+  *  **Firefox插件** [ExLogger For Firefox](https://github.com/lambda47/ExLoggerForFirefox)
+
+## console方式工作原理
+console方式通过php在调用ExLogger时，收集程序相关运行信息，整理后保存在HTTP Head中。浏览器插件会捕获HTTP Head中的信息，输出倒console中。
+1.  **安全性**：因为是通过HTTP Head名文传输session和sql等重要信息，所以只能用于**测试环境**，请勿应用与生产环境。
+2.  **HTTP Head大小限制**：一般服务器会有对HTTP Head大小的限制（如：nginx默认大小4KB），但是在正常应用条件下，通常不会达到此限制。如果超过最大限制，可修改相应的配置文件进行调整。
 
 ## 调用方式
 通过构造器调用
